@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinterest Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 400px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #bd081c;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #8a0614;
+        }
+
+        #profile img {
+            border-radius: 50%;
+            margin-top: 20px;
+        }
+
+        #pins img {
+            width: 100px;
+            height: 100px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Login to Pinterest</h2>
+        <button id="loginButton">Login with Pinterest</button>
+        <div id="profile"></div>
+        <div id="pins"></div>
+    </div>
+    <script>
+        const clientId = 'YOUR_CLIENT_ID';
+        const redirectUri = 'YOUR_REDIRECT_URI';
+        const scope = 'read_public,read_relationships';
+
+        // Step 1: Redirect the user to Pinterest's OAuth page
+        document.getElementById('loginButton').addEventListener('click', () => {
+            const authUrl = `https://api.pinterest.com/oauth/?response_type=token&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=768uyFys`;
+            window.location.href = authUrl;
+        });
+
+        // Step 2: Handle the redirect and extract the access token
+        window.onload = function() {
+            if (window.location.hash) {
+                const accessToken = window.location.hash.split('&')[0].split('=')[1];
+                getUserProfile(accessToken);
+                getUserPins(accessToken);
+            }
+        };
+
+        // Step 3: Fetch user profile information
+        function getUserProfile(accessToken) {
+            fetch(`https://api.pinterest.com/v1/me/?access_token=${accessToken}`)
+                .then(response => response.json())
+                .then(data => {
+                    const profileHtml = `
+                        <h3>${data.data.first_name} ${data.data.last_name}</h3>
+                        <img src="${data.data.image['60x60'].url}" alt="Profile Image">
+                    `;
+                    document.getElementById('profile').innerHTML = profileHtml;
+                })
+                .catch(error => console.error('Error fetching profile:', error));
+        }
+
+        // Step 4: Fetch user pins
+        function getUserPins(accessToken) {
+            fetch(`https://api.pinterest.com/v1/me/pins/?access_token=${accessToken}`)
+                .then(response => response.json())
+                .then(data => {
+                    let pinsHtml = '<h3>Your Pins</h3>';
+                    data.data.forEach(pin => {
+                        pinsHtml += `<img src="${pin.image.original.url}" alt="Pin Image">`;
+                    });
+                    document.getElementById('pins').innerHTML = pinsHtml;
+                })
+                .catch(error => console.error('Error fetching pins:', error));
+        }
+    </script>
+</body>
+</html>
